@@ -69,9 +69,7 @@ describe('Page model', function() {
                 Page.findByTag('one').then(function(pages) {
                     expect(pages[0].title).to.be.equal(page.title);
                     done();
-                }).then(null,function(err) {
-                    console.log(err);
-                });
+                }).then(null,done);
                 // expect(Page.findByTag('one')).to.be.equal([page]);
             });
             it('does not get pages without the search tag', function(done) {
@@ -113,60 +111,106 @@ describe('Page model', function() {
 
             var mapToTitle = function(pageArray, page) {
                 return pageArray.map(function(obj) {
-                            return obj.title;
-                            }).indexOf(page.title)
+                    return obj.title;
+                }).indexOf(page.title);
             }
 
             it('never gets itself', function(done) {
-                // Page.findOne({ title: 'FirstPage' })
-
-                    page1.then(function(page) {
-                        console.log(page)
-                        var result = page.findSimilar();
-                        console.log('first: ', result); 
-                        return result; 
-
-                    })
-                    .then(function(pageArray) {
-                        console.log(pageArray)
-                        var result = page1.then(function(page) {
-                            console.log('what is page: ', page)
-                            return maptoTitle(pageArray, page);
-                        })
-                        console.log('2nd: ', result); 
-                        return result; 
-                    })
-                    .then(function(pageIndex) {
-                        console.log('pageIndex: ', -1); 
-                        console.log('arrived in final then')
-                        pageIndex.then(function(index) {
-                            expect(pageIndex).to.be.equal(-1); 
-                            done();                         
-                        })
-                    })
+                page1.then(function(page) {
+                    return page.findSimilar();
+                })
+                .then(function(pageArray) {
+                    return page1.then(function(page) {
+                        return mapToTitle(pageArray,page);
+                    });
+                })
+                .then(function(pageIndex) {
+                    expect(pageIndex).to.be.equal(-1);
+                    done();
+                })
+                .then(null, done);
             });
-            xit('gets other pages with any common tags', function(done) {   
-                    page1.then(function(page) {
-                        return page.findSimilar();
-
-                    })
-                    .then(function(pageArray) {
-                        expect(pageArray[0].title).to.be.equal('SecondPage'); 
-                        done(); 
-                    })
+            it('gets other pages with any common tags', function(done) {   
+                page1.then(function(page) {
+                    return page.findSimilar();
+                })
+                .then(function(pageArray) {
+                    return page2.then(function(page) {
+                        return mapToTitle(pageArray,page);
+                    });
+                })
+                .then(function(pageIndex) {
+                    expect(pageIndex).to.not.be.equal(-1);
+                    done();
+                })
+                .then(null, done);
             });
-            xit('does not get other pages without any common tags', function() {});
+            it('does not get other pages without any common tags', function(done) {
+                page1.then(function(page) {
+                    return page.findSimilar();
+                })
+                .then(function(pageArray) {
+                    return page3.then(function(page) {
+                        return mapToTitle(pageArray,page);
+                    });
+                })
+                .then(function(pageIndex) {
+                    expect(pageIndex).to.be.equal(-1);
+                    done();
+                })
+                .then(null, done);
+            });
         });
     });
 
     describe('Virtuals', function() {
         describe('route', function() {
-            xit('returns the url_name prepended by "/wiki/"', function() {});
+            var page;
+            beforeEach(function() {
+                page = new Page({
+                    title: "Test Page",
+                    urlTitle: "Test_Page",
+                    content: "test",
+                    tags: ['one','two','three']
+                });
+            });
+
+            afterEach(function(done) {
+                Page.remove({}).exec(done);
+            });
+
+            it('returns the url_name prepended by "/wiki/"', function() {
+                expect(page.route).to.be.equal('/wiki/Test_Page');
+            });
         });
     });
 
     describe('Hooks', function() {
-        xit('it sets urlTitle based on title before validating', function() {});
+        var page; 
+        beforeEach(function() {
+            page = new Page({
+                title: 'FirstPage',
+                content: '1content',
+                tags: ['one']
+            });
+        });
+
+        afterEach(function(done) {
+            Page.remove({}).exec(done);
+        });
+
+
+        xit('it sets urlTitle based on title before validating', function(done) {
+            console.log(Page.schema.callQueue[0][1]);
+            var spy = chai.spy.on(Page.schema, 'callQueue[0]');
+            // console.log(spy);
+            page.save()
+            .then(function() {
+                expect(spy).to.have.been.called();
+                done();
+            })
+            .then(null, done);
+        });
     });
 
 });
