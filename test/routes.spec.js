@@ -76,13 +76,30 @@ describe('http requests', function() {
     });
 
 
-    describe('GET /wiki/add', function() {
-        xit('gets 200', function() {});
-    });
-
+    // describe('GET /wiki/add', function() {
+    //     xit('gets 200', function() {});
+    // });
 
     describe('POST /wiki/add', function() {
-        // xit(creates in db, function() {});
+        it('creates in db', function(done) {
+          agent
+            .post('/wiki')
+            .send({ 
+              title: "TheONe",
+              content: "duh",
+              status: "open",
+              name: "zat", 
+              email: "zat@zat.com",
+              tags: "asf,testf"
+            })
+            .then(function() {
+              agent
+                .get('/wiki/TheONe')
+                .expect(200, done)
+            })
+            // .then(null, done); 
+
+        });
     });
 
 });
